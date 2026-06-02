@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🔍 RAG Chatbot — Web Page Q&A
 
 Ask questions about any website. The bot reads the pages, remembers them, and answers using only what it found there.
@@ -79,3 +80,6 @@ Your browser will open automatically. Paste your API key in the sidebar and star
 - You can add more URLs anytime — just add them to `ingest.py` and run it again. Old data is preserved.
 - The bot only knows what's in the indexed pages. If it says "I don't know", the answer isn't in your documents.
 - Adjust `CHUNK_SIZE` in `ingest.py` if answers feel too fragmented (increase) or too broad (decrease).
+=======
+# RAG-project-experiment
+>>>>>>> 732be177d75826532830ce4d702b7c71c99c40e6
