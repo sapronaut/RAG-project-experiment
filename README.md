@@ -1,60 +1,31 @@
-<<<<<<< HEAD
-# 🔍 RAG Chatbot — Web Page Q&A
+# rag-chatbot
 
-Ask questions about any website. The bot reads the pages, remembers them, and answers using only what it found there.
+A minimal RAG pipeline that lets you ask questions about any webpage. Built with Python, Chroma, and Claude.
 
----
+## stack
 
-## What is RAG?
+- **scraping** — httpx + BeautifulSoup
+- **embeddings** — sentence-transformers (`all-MiniLM-L6-v2`, runs locally)
+- **vector db** — Chroma (persisted to `./chroma_db`)
+- **llm** — Claude via Anthropic API
+- **ui** — Streamlit
 
-**RAG = Retrieval-Augmented Generation**
+## setup
 
-Normal ChatGPT knows things from its training data.  
-RAG lets the AI answer from *your* documents instead.
-
-The flow:
-```
-Your URLs → Read & Save → [Database]
-                               ↓
-Your Question → Search → Relevant Chunks → Claude → Answer
-```
-
----
-
-## Project Structure
-
-```
-rag_project/
-├── ingest.py       # Step 1: Read URLs and save to database
-├── retriever.py    # Step 2: Search the database (used by app.py)
-├── app.py          # Step 3: Chat UI
-└── requirements.txt
-```
-
----
-
-## Setup (one time)
-
-**1. Install dependencies**
 ```bash
 pip install -r requirements.txt
 ```
 
-**2. Get an Anthropic API key**  
-Sign up at https://console.anthropic.com and copy your key.
+Get an API key at [console.anthropic.com](https://console.anthropic.com).
 
----
+## usage
 
-## Usage
+**1. Index your URLs**
 
-**Step 1 — Tell it what to read**
-
-Open `ingest.py` and edit this part:
+Edit the list in `ingest.py`:
 ```python
 urls_to_index = [
-    "https://en.wikipedia.org/wiki/Retrieval-augmented_generation",
-    "https://en.wikipedia.org/wiki/Large_language_model",
-    # Add your own URLs here!
+    "https://example.com/page",
 ]
 ```
 
@@ -63,23 +34,24 @@ Then run:
 python ingest.py
 ```
 
-This creates a `chroma_db/` folder — your local database.  
-You only need to do this again when you want to add new URLs.
-
-**Step 2 — Start the chatbot**
+**2. Start the app**
 ```bash
 streamlit run app.py
 ```
 
-Your browser will open automatically. Paste your API key in the sidebar and start asking questions!
+Paste your API key in the sidebar and ask away.
 
----
+## structure
 
-## Tips
+```
+├── ingest.py       # scrape → chunk → embed → store
+├── retriever.py    # query → search → return top-k chunks
+├── app.py          # streamlit chat UI
+└── chroma_db/      # auto-created on first ingest
+```
 
-- You can add more URLs anytime — just add them to `ingest.py` and run it again. Old data is preserved.
-- The bot only knows what's in the indexed pages. If it says "I don't know", the answer isn't in your documents.
-- Adjust `CHUNK_SIZE` in `ingest.py` if answers feel too fragmented (increase) or too broad (decrease).
-=======
-# RAG-project-experiment
->>>>>>> 732be177d75826532830ce4d702b7c71c99c40e6
+## notes
+
+- Re-run `ingest.py` anytime to add more URLs. Existing data is preserved.
+- The bot answers strictly from indexed content — it won't hallucinate beyond it.
+- Tune `CHUNK_SIZE` in `ingest.py` if answers feel off (default: 500 chars).
