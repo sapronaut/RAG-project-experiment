@@ -1,22 +1,24 @@
 # rag-chatbot
 
-A minimal RAG pipeline that lets you ask questions about any webpage. Built with Python, Chroma, and Claude.
+Ask questions about any webpage. The bot reads the pages, remembers them, and answers using only what it found there.
 
-## stack
+## tech stack
 
-- **scraping** — httpx + BeautifulSoup
-- **embeddings** — sentence-transformers (`all-MiniLM-L6-v2`, runs locally)
-- **vector db** — Chroma (persisted to `./chroma_db`)
-- **llm** — Claude via Anthropic API
-- **ui** — Streamlit
+| layer | tool |
+|---|---|
+| scraping | httpx + BeautifulSoup |
+| embeddings | sentence-transformers (`all-MiniLM-L6-v2`) |
+| vector db | ChromaDB (local, persisted to `./chroma_db`) |
+| llm | Llama 3.1 8B via Groq API |
+| ui | Streamlit |
 
 ## setup
 
 ```bash
-pip install -r requirements.txt
+pip install httpx beautifulsoup4 chromadb sentence-transformers streamlit groq
 ```
 
-Get an API key at [console.anthropic.com](https://console.anthropic.com).
+Get a free Groq API key at [console.groq.com](https://console.groq.com) → API Keys → Create.
 
 ## usage
 
@@ -25,7 +27,9 @@ Get an API key at [console.anthropic.com](https://console.anthropic.com).
 Edit the list in `ingest.py`:
 ```python
 urls_to_index = [
-    "https://example.com/page",
+    "https://en.wikipedia.org/wiki/Retrieval-augmented_generation",
+    "https://en.wikipedia.org/wiki/Large_language_model",
+    "https://en.wikipedia.org/wiki/Vector_database",
 ]
 ```
 
@@ -36,22 +40,33 @@ python ingest.py
 
 **2. Start the app**
 ```bash
-streamlit run app.py
+python -m streamlit run app.py
 ```
 
-Paste your API key in the sidebar and ask away.
+Paste your Groq API key in the sidebar and start asking questions.
 
 ## structure
 
 ```
-├── ingest.py       # scrape → chunk → embed → store
-├── retriever.py    # query → search → return top-k chunks
-├── app.py          # streamlit chat UI
-└── chroma_db/      # auto-created on first ingest
+├── ingest.py       # scrape → chunk → embed → store in ChromaDB
+├── retriever.py    # embed query → search ChromaDB → return top-5 chunks
+├── app.py          # streamlit chat UI → retriever + Groq LLM
+├── requirements.txt
+└── chroma_db/      # auto-created on first ingest, do not commit
 ```
+
+## how it works
+
+```
+URLs → scrape → split into chunks → embed → ChromaDB
+                                                ↓
+question → embed → similarity search → top 5 chunks → Llama → answer
+```
+
+The LLM only sees the retrieved chunks, not the whole database — this keeps answers grounded and prevents hallucination.
 
 ## notes
 
 - Re-run `ingest.py` anytime to add more URLs. Existing data is preserved.
-- The bot answers strictly from indexed content — it won't hallucinate beyond it.
-- Tune `CHUNK_SIZE` in `ingest.py` if answers feel off (default: 500 chars).
+- Wikipedia URLs use the MediaWiki API instead of scraping to avoid 403 blocks.
+- Add `chroma_db/` and `*.pkl` to your `.gitignore` before pushing.
