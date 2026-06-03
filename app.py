@@ -1,17 +1,3 @@
-"""
-app.py — Step 3: The chat interface
-
-What this file does in plain English:
-  - Shows a browser-based chat UI (powered by Streamlit)
-  - When you type a question:
-      1. Searches your indexed documents for relevant chunks (via retriever.py)
-      2. Sends those chunks + your question to Claude
-      3. Claude reads ONLY those chunks and answers based on them
-      4. The answer appears in the chat, with sources listed
-
-Run with:
-  streamlit run app.py
-"""
 
 import streamlit as st
 import anthropic
@@ -105,11 +91,6 @@ if user_question := st.chat_input("Ask a question about your documents..."):
         for c in chunks
     )
 
-    # ── Build the prompt for Claude ───────────────────────────────────────────
-    
-    # We use a "system prompt" to give Claude its instructions.
-    # Crucially: we tell it to ONLY use the provided context.
-    # This prevents hallucination — Claude won't make things up.
     system_prompt = """You are a helpful research assistant.
 You will be given CONTEXT extracted from web pages, and a QUESTION from the user.
 

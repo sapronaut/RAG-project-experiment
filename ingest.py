@@ -19,34 +19,50 @@ EMBED_MODEL = "all-MiniLM-L6-v2"
 
 def scrape_url(url: str) -> str:
     """
-    Download a webpage and extract readable text.
+    For Wikipedia URLs, use the official API instead of scraping.
+    For other URLs, fall back to normal scraping.
     """
-    print(f"Scraping: {url}")
+    print(f"  Scraping: {url}")
 
-    headers = {
-        "User-Agent": "Mozilla/5.0 (RAG Bot)"
+    # Detect Wikipedia URLs and use their API
+if "wikipedia.org/wiki/" in url:
+    title = url.split("/wiki/")[-1]
+    # Use the older MediaWiki API instead — less likely to be blocked
+    api_url = "https://en.wikipedia.org/w/api.php"
+    params = {
+        "action": "query",
+        "format": "json",
+        "titles": title,
+        "prop": "extracts",
+        "explaintext": True,  # plain text, no HTML
+        "exsectionformat": "plain",
     }
+    headers = {"User-Agent": "RAGBot/1.0 (saptarshi@example.com)"}
+    response = httpx.get(api_url, params=params, headers=headers, timeout=15)
+    response.raise_for_status()
 
-    response = httpx.get(
-        url,
-        headers=headers,
-        timeout=15,
-        follow_redirects=True
-    )
+    data = response.json()
+    pages = data["query"]["pages"]
+    text = next(iter(pages.values())).get("extract", "")
+    print(f"  Got {len(text)} chars via MediaWiki API")
+    return text
 
+    # For non-Wikipedia URLs, use normal scraping
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+    }
+    response = httpx.get(url, headers=headers, timeout=15, follow_redirects=True)
     response.raise_for_status()
 
     soup = BeautifulSoup(response.text, "html.parser")
-
-    # Remove unwanted page elements
     for tag in soup(["script", "style", "nav", "footer", "header"]):
         tag.decompose()
 
     text = soup.get_text(separator=" ")
-
-    # Clean excessive whitespace
     text = re.sub(r"\s+", " ", text).strip()
-
+    print(f"  Got {len(text)} chars via scraping")
     return text
 
 
